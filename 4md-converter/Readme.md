@@ -1,0 +1,1 @@
+Fixed up version of 4MD2MOD by Admiral_Bob that does the conversion correctly by upscaling the 4-bit sample values to 8-bit
