@@ -60,13 +60,13 @@ typedef struct
 
 
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        printf("No filename given");
+    if (argc < 2 || argc > 4) {
+        printf("Usage: gfxtool filename [palette] [transparent_color]");
         return EXIT_FAILURE;
     }
     FILE* inputFile = fopen(argv[1], "rb");
     if (!inputFile) {
-        printf("File not found");
+        printf("Input file %s not found\n", argv[1]);
         return EXIT_FAILURE;
     }
 
@@ -129,6 +129,7 @@ int main(int argc, char* argv[]) {
         slpFrameInfo* frameData = (slpFrameInfo*)(fileData + sizeof(slpFileHeader));
 
         for (int32_t i = 0; i < header->num_frames; ++i) {
+            // printf("Reading frame %d\n", i + 1);
             slpFrameInfo* curFrame = &frameData[i];
             BMP* bmpFile = BMP_Create(curFrame->width, curFrame->height, 8);
             for (int32_t j = 0; j < 256; ++j) {
@@ -142,7 +143,7 @@ int main(int argc, char* argv[]) {
             for (int32_t y = 0; y < curFrame->height; ++y) {
                 int32_t x = 0;
                 slpRowEdge* edgeData = (slpRowEdge*)(fileData + curFrame->outline_table_offset + 4 * y);
-                if (edgeData->left == 0x8000 || edgeData->right == 0x8000) continue;
+                if (edgeData->left == INT16_MIN || edgeData->right == INT16_MIN) continue;
 
                 int16_t leftOffset = edgeData->left;
                 int16_t rightOffset = edgeData->right; //Is this needed??
@@ -238,6 +239,12 @@ int main(int argc, char* argv[]) {
                             for (int32_t i = 0; i < length; ++i) {
                                 BMP_SetPixelIndex(bmpFile, x++ + leftOffset, y, color);
                             }
+                            break;
+                        }
+                        // Extended command
+                        case 0x0E: {
+                            uint8_t extendedData = *commandData++;
+                            printf("Extended command 0x%02x\n", extendedData);
                             break;
                         }
                         // End of row
